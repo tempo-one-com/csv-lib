@@ -1,10 +1,13 @@
-use chrono::NaiveDate;
+use crate::{cell::Cell, config::Config, formatter::{FormatType, Formatter}, models::{CellType, Eol, FieldSeparator, QuoteMode}};
 
-use crate::formater::{FormatType, Formater};
+/// implémenter ce trait pour sérialiser la struct en question
+pub trait CsvStruct {
+    fn get_cells(&self) -> Vec<Cell>;
+}
 
 pub struct Csv<F>
 where
-    F: Formater + Sized,
+    F: Formatter + Sized,
 {
     pub config: Config,
     pub formater: F,
@@ -12,7 +15,7 @@ where
 
 impl<F> Csv<F>
 where
-    F: Formater + Sized,
+    F: Formatter + Sized,
 {
     pub fn serialize<S, T>(&self, values: &[S]) -> String
     where
@@ -112,80 +115,3 @@ where
     }
 }
 
-#[derive(Debug, Clone)]
-pub enum QuoteMode {
-    None,
-    Mixed,
-    All,
-}
-
-pub enum Eol {
-    Unix,
-    Windows,
-}
-
-pub enum FieldSeparator {
-    Comma,
-    SemiColumn,
-}
-
-pub enum CellType {
-    String(String),
-    StringOpt(Option<String>),
-
-    Date(NaiveDate),
-    DateOpt(Option<NaiveDate>),
-
-    Float(f32),
-    FloatOpt(Option<f32>),
-    Float64(f64),
-    FloatOpt64(Option<f64>),
-
-    Int(i32),
-    IntOpt(Option<i32>),
-}
-
-pub trait CsvStruct {
-    fn get_cells(&self) -> Vec<Cell>;
-}
-
-pub struct Cell {
-    pub title: Option<String>,
-    pub value: CellType,
-}
-
-impl Cell {
-    pub fn new_title(title: &str, value: CellType) -> Self {
-        Self {
-            title: Some(title.to_string()),
-            value,
-        }
-    }
-}
-
-pub struct Config {
-    pub eol: Eol,
-    pub separator: FieldSeparator,
-    pub mode: QuoteMode,
-    pub has_header: bool,
-}
-
-impl Config {
-    pub fn new_unix_fr() -> Self {
-        Self {
-            eol: Eol::Unix,
-            separator: FieldSeparator::SemiColumn,
-            mode: QuoteMode::Mixed,
-            has_header: true,
-        }
-    }
-
-    pub fn new_unix_en() -> Self {
-        Self {
-            eol: Eol::Unix,
-            separator: FieldSeparator::Comma,
-            mode: QuoteMode::Mixed,
-            has_header: true,
-        }
-    }
-}

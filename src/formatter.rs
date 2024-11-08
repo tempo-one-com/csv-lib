@@ -3,14 +3,14 @@ pub enum FormatType {
     Float(String),
 }
 
-pub trait Formater {
+pub trait Formatter {
     fn date(&self) -> FormatType;
     fn float(&self) -> FormatType;
 }
 
 pub struct FormatFr;
 
-impl Formater for FormatFr {
+impl Formatter for FormatFr {
     fn date(&self) -> FormatType {
         FormatType::Date("%d/%m/%Y".to_string())
     }
@@ -20,9 +20,9 @@ impl Formater for FormatFr {
     }
 }
 
-pub struct FormatEn;
+pub struct FormatStandard;
 
-impl Formater for FormatEn {
+impl Formatter for FormatStandard {
     fn date(&self) -> FormatType {
         FormatType::Date("%Y-%m-%d".to_string())
     }

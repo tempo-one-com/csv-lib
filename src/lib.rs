@@ -1,14 +1,18 @@
+mod cell;
+mod config;
 mod csv;
-mod formater;
-mod lang;
-
+mod formatter;
+mod models;
 
 #[cfg(test)]
 mod tests {
 
+    use cell::Cell;
     use chrono::NaiveDate;
+    use config::Config;
     use csv::*;
-    use formater::{FormatEn, FormatFr};
+    use formatter::{FormatStandard, FormatFr};
+    use models::{CellType, Eol, FieldSeparator, QuoteMode};
 
     use super::*;
 
@@ -19,7 +23,7 @@ mod tests {
     }
 
     impl CsvStruct for Basic {
-        fn get_cells(&self) -> Vec<csv::Cell> {
+        fn get_cells(&self) -> Vec<Cell> {
             vec![
                 Cell::new_title("Name", CellType::String(self.name.clone())),
                 Cell::new_title("Taille", CellType::Float(self.size)),
@@ -37,7 +41,7 @@ mod tests {
     }
     
     impl CsvStruct for Person {
-        fn get_cells(&self) -> Vec<csv::Cell> {
+        fn get_cells(&self) -> Vec<Cell> {
             vec![
                 Cell::new_title("Name", CellType::String(self.name.clone())),
                 Cell::new_title("Taille", CellType::Float(self.size)),
@@ -64,7 +68,7 @@ mod tests {
             },
         ];
 
-        let config = Config::new_unix_fr();
+        let config = Config::new_unix_semi_column();
         let formater = FormatFr;
 
         let csv = Csv { config, formater };
@@ -99,7 +103,7 @@ mod tests {
             mode: QuoteMode::Mixed,
             has_header: true,
         };
-        let formater = FormatEn;
+        let formater = FormatStandard;
 
         let csv = Csv { config, formater };
         let result = csv.serialize::<_, Person>(&values);
@@ -126,7 +130,7 @@ mod tests {
             has_header: true,
         };
 
-        let formater = FormatEn;
+        let formater = FormatStandard;
 
         let csv = Csv { config, formater };
         let result = csv.serialize::<_, Person>(&values);
@@ -145,12 +149,8 @@ A,0.000"#;
             },
         ];
 
-        let config = Config {
-            eol: Eol::Unix,
-            separator: FieldSeparator::SemiColumn,
-            mode: QuoteMode::All,
-            has_header: true,
-        };
+        let config = Config::new_unix_semi_column()
+            .with_mode(QuoteMode::All);
 
         let formater = FormatFr;
 
@@ -171,12 +171,7 @@ A,0.000"#;
             },
         ];
 
-        let config = Config {
-            eol: Eol::Unix,
-            separator: FieldSeparator::SemiColumn,
-            mode: QuoteMode::Mixed,
-            has_header: true,
-        };
+        let config = Config::new_unix_semi_column();
 
         let formater = FormatFr;
 
@@ -197,12 +192,8 @@ A,0.000"#;
             },
         ];
 
-        let config = Config {
-            eol: Eol::Unix,
-            separator: FieldSeparator::SemiColumn,
-            mode: QuoteMode::Mixed,
-            has_header: false,
-        };
+        let config = Config::new_unix_semi_column()
+            .with_header(false);
 
         let formater = FormatFr;
 
