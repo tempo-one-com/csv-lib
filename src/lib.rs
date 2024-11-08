@@ -1,8 +1,8 @@
-mod cell;
-mod config;
-mod csv;
-mod formatter;
-mod models;
+pub mod cell;
+pub mod config;
+pub mod csv;
+pub mod formatter;
+pub mod models;
 
 #[cfg(test)]
 mod tests {
@@ -72,7 +72,7 @@ mod tests {
         let formater = FormatFr;
 
         let csv = Csv { config, formater };
-        let result = csv.serialize::<_, Person>(&values);
+        let result = csv.serialize::<Person>(&values);
         let expected = r#""Name";"Taille";"DOB";"DeletedOn"
 "A";1,790;28/01/2020;07/11/2024
 "B";1,750;11/10/1950;"#;
@@ -106,7 +106,7 @@ mod tests {
         let formater = FormatStandard;
 
         let csv = Csv { config, formater };
-        let result = csv.serialize::<_, Person>(&values);
+        let result = csv.serialize::<Person>(&values);
         let expected = r#""Name","Taille","DOB","DeletedOn"
 "A",1.790,2020-01-28,2024-11-07
 "B",1.750,1950-10-11,"#;
@@ -133,7 +133,7 @@ mod tests {
         let formater = FormatStandard;
 
         let csv = Csv { config, formater };
-        let result = csv.serialize::<_, Person>(&values);
+        let result = csv.serialize::<Basic>(&values);
         let expected = r#"Name,Taille
 A,0.000"#;
 
@@ -155,7 +155,7 @@ A,0.000"#;
         let formater = FormatFr;
 
         let csv = Csv { config, formater };
-        let result = csv.serialize::<_, Person>(&values);
+        let result = csv.serialize::<Basic>(&values);
         let expected = r#""Name";"Taille"
 "A";"0,000""#;
 
@@ -176,7 +176,7 @@ A,0.000"#;
         let formater = FormatFr;
 
         let csv = Csv { config, formater };
-        let result = csv.serialize::<_, Person>(&values);
+        let result = csv.serialize::<Basic>(&values);
         let expected = r#""Name";"Taille"
 "A";0,000"#;
 
@@ -198,7 +198,7 @@ A,0.000"#;
         let formater = FormatFr;
 
         let csv = Csv { config, formater };
-        let result = csv.serialize::<_, Person>(&values);
+        let result = csv.serialize::<Basic>(&values);
         let expected = r#""A";0,000"#;
 
         assert_eq!(expected, result);
