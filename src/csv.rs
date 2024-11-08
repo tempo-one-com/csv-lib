@@ -2,8 +2,6 @@ use chrono::NaiveDate;
 
 use crate::formater::{FormatType, Formater};
 
-//type PropGetter<S, T> = Fn(&S) -> T;
-
 pub struct Csv<F>
 where
     F: Formater + Sized,
@@ -39,7 +37,7 @@ where
             let mut row = vec![];
 
             for cell in item.get_cells() {
-                if i == 0 {
+                if i == 0 && self.config.has_header {
                     if let Some(title) = &cell.title {
                         let value = match mode {
                             QuoteMode::None => title.to_string(),
@@ -101,10 +99,12 @@ where
             rows.push(row);
         }
 
-        let header = header.join(field_separator);
+        if !header.is_empty() {
+            let header = header.join(field_separator);
+            data.push_str(&header);
+            data.push_str(eol);            
+        }
 
-        data.push_str(&header);
-        data.push_str(eol);
         let rows = rows.join(eol);
         data.push_str(&rows);
 
@@ -167,6 +167,7 @@ pub struct Config {
     pub eol: Eol,
     pub separator: FieldSeparator,
     pub mode: QuoteMode,
+    pub has_header: bool,
 }
 
 impl Config {
@@ -175,6 +176,7 @@ impl Config {
             eol: Eol::Unix,
             separator: FieldSeparator::SemiColumn,
             mode: QuoteMode::Mixed,
+            has_header: true,
         }
     }
 
@@ -183,6 +185,7 @@ impl Config {
             eol: Eol::Unix,
             separator: FieldSeparator::Comma,
             mode: QuoteMode::Mixed,
+            has_header: true,
         }
     }
 }
