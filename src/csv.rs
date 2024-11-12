@@ -4,7 +4,7 @@ use toml::Table;
 use crate::{
     cell::Cell,
     config::Config,
-    formatter::{FormatType, Formatter},
+    formatter::{CommaFloatWithFrDateFormat, DotFloatWithIsoDateFormat, FormatType, Formatter},
     models::{CellType, Eol, FieldSeparator, QuoteMode},
 };
 
@@ -21,7 +21,25 @@ where
     pub formatter: F,
 }
 
-impl<F> Csv<F>
+impl  Csv<CommaFloatWithFrDateFormat> {
+    pub fn new_fr(config: Config) -> Self {
+        Self {
+            config,
+            formatter: CommaFloatWithFrDateFormat,    
+        }
+    }
+}
+
+impl  Csv<DotFloatWithIsoDateFormat> {
+    pub fn new_iso(config: Config) -> Self {
+        Self {
+            config,
+            formatter: DotFloatWithIsoDateFormat,    
+        }
+    }
+}
+
+impl <F> Csv<F> 
 where
     F: Formatter + Sized,
 {
@@ -169,7 +187,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::formatter::FormatFr;
+    use crate::formatter::CommaFloatWithFrDateFormat;
 
     use super::*;
 
@@ -183,7 +201,7 @@ mod tests {
         let translations: Table = toml::from_str(toml_data).unwrap();
         let csv = Csv {
             config: Config::new_unix_comma(),
-            formatter: FormatFr,
+            formatter: CommaFloatWithFrDateFormat,
         };
 
         let result = csv.get_i18n_title("commons.recipient", &translations);
@@ -200,7 +218,7 @@ mod tests {
         let translations: Table = toml::from_str(toml_data).unwrap();
         let csv = Csv {
             config: Config::new_unix_comma(),
-            formatter: FormatFr,
+            formatter: CommaFloatWithFrDateFormat,
         };
 
         let result = csv.get_i18n_title("recipient", &translations);

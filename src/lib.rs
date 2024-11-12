@@ -11,7 +11,6 @@ mod tests {
     use chrono::NaiveDate;
     use config::Config;
     use csv::*;
-    use formatter::{FormatFr, FormatStandard};
     use models::{CellType, Eol, FieldSeparator, QuoteMode};
 
     use super::*;
@@ -68,12 +67,8 @@ mod tests {
         ];
 
         let config = Config::new_unix_semi_column();
-        let formater = FormatFr;
 
-        let csv = Csv {
-            config,
-            formatter: formater,
-        };
+        let csv = Csv::new_fr(config);
         let result = csv.serialize::<Person>(&values);
         let expected = r#""Name";"Taille";"DOB";"DeletedOn"
 "A";1,790;28/01/2020;07/11/2024
@@ -105,12 +100,10 @@ mod tests {
             mode: QuoteMode::Mixed,
             has_header: true,
         };
-        let formater = FormatStandard;
 
-        let csv = Csv {
-            config,
-            formatter: formater,
-        };
+
+
+        let csv = Csv::new_iso(config);
         let result = csv.serialize::<Person>(&values);
         let expected = r#""Name","Taille","DOB","DeletedOn"
 "A",1.790,2020-01-28,2024-11-07
@@ -133,12 +126,8 @@ mod tests {
             has_header: true,
         };
 
-        let formater = FormatStandard;
+        let csv = Csv::new_iso(config);
 
-        let csv = Csv {
-            config,
-            formatter: formater,
-        };
         let result = csv.serialize::<Basic>(&values);
         let expected = r#"Name,Taille
 A,0.000"#;
@@ -155,12 +144,8 @@ A,0.000"#;
 
         let config = Config::new_unix_semi_column().with_mode(QuoteMode::All);
 
-        let formater = FormatFr;
 
-        let csv = Csv {
-            config,
-            formatter: formater,
-        };
+        let csv = Csv::new_fr(config);
         let result = csv.serialize::<Basic>(&values);
         let expected = r#""Name";"Taille"
 "A";"0,000""#;
@@ -177,12 +162,7 @@ A,0.000"#;
 
         let config = Config::new_unix_semi_column();
 
-        let formater = FormatFr;
-
-        let csv = Csv {
-            config,
-            formatter: formater,
-        };
+        let csv = Csv::new_fr(config);
         let result = csv.serialize::<Basic>(&values);
         let expected = r#""Name";"Taille"
 "A";0,000"#;
@@ -199,12 +179,7 @@ A,0.000"#;
 
         let config = Config::new_unix_semi_column().with_header(false);
 
-        let formater = FormatFr;
-
-        let csv = Csv {
-            config,
-            formatter: formater,
-        };
+        let csv = Csv::new_fr(config);
         let result = csv.serialize::<Basic>(&values);
         let expected = r#""A";0,000"#;
 

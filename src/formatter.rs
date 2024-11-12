@@ -8,9 +8,9 @@ pub trait Formatter {
     fn float(&self) -> FormatType;
 }
 
-pub struct FormatFr;
+pub struct CommaFloatWithFrDateFormat;
 
-impl Formatter for FormatFr {
+impl Formatter for CommaFloatWithFrDateFormat {
     fn date(&self) -> FormatType {
         FormatType::Date("%d/%m/%Y".to_string())
     }
@@ -20,9 +20,22 @@ impl Formatter for FormatFr {
     }
 }
 
-pub struct FormatStandard;
 
-impl Formatter for FormatStandard {
+pub struct CommaFloatWithIsoDateFormat;
+
+impl Formatter for CommaFloatWithIsoDateFormat {
+    fn date(&self) -> FormatType {
+        FormatType::Date("%Y-%m-%d".to_string())
+    }
+
+    fn float(&self) -> FormatType {
+        FormatType::Float(",".to_string())
+    }
+}
+
+pub struct DotFloatWithIsoDateFormat;
+
+impl Formatter for DotFloatWithIsoDateFormat {
     fn date(&self) -> FormatType {
         FormatType::Date("%Y-%m-%d".to_string())
     }
