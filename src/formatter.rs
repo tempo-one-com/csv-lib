@@ -1,46 +1,40 @@
+#[derive(Clone)]
 pub enum FormatType {
     Date(String),
     Float(String),
 }
 
-pub trait Formatter {
-    fn date(&self) -> FormatType;
-    fn float(&self) -> FormatType;
+pub struct CellFormatter {
+    pub date_format: FormatType,
+    pub float_format: FormatType,
 }
 
-pub struct CommaFloatWithFrDateFormat;
-
-impl Formatter for CommaFloatWithFrDateFormat {
-    fn date(&self) -> FormatType {
-        FormatType::Date("%d/%m/%Y".to_string())
+impl CellFormatter {
+    pub fn new_iso() -> Self {
+        Self {
+            date_format: FormatType::Date("%Y-%m-%d".to_string()),
+            float_format: FormatType::Float(".".to_string()),
+        }
     }
 
-    fn float(&self) -> FormatType {
-        FormatType::Float(",".to_string())
-    }
-}
-
-
-pub struct CommaFloatWithIsoDateFormat;
-
-impl Formatter for CommaFloatWithIsoDateFormat {
-    fn date(&self) -> FormatType {
-        FormatType::Date("%Y-%m-%d".to_string())
+    pub fn new_fr() -> Self {
+        Self {
+            date_format: FormatType::Date("%d/%m/%Y".to_string()),
+            float_format: FormatType::Float(",".to_string()),
+        }
     }
 
-    fn float(&self) -> FormatType {
-        FormatType::Float(",".to_string())
-    }
-}
-
-pub struct DotFloatWithIsoDateFormat;
-
-impl Formatter for DotFloatWithIsoDateFormat {
-    fn date(&self) -> FormatType {
-        FormatType::Date("%Y-%m-%d".to_string())
+    pub fn with_date_format(self, date_format: FormatType) -> Self {
+        Self {
+            date_format,
+            ..self
+        }
     }
 
-    fn float(&self) -> FormatType {
-        FormatType::Float(".".to_string())
+    pub fn with_float_format(self, float_format: FormatType) -> Self {
+        Self {
+            float_format,
+            ..self
+        }
     }
 }

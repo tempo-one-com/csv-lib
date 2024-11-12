@@ -4,7 +4,7 @@ use toml::Table;
 use crate::{
     cell::Cell,
     config::Config,
-    formatter::{CommaFloatWithFrDateFormat, DotFloatWithIsoDateFormat, FormatType, Formatter},
+    formatter::{CellFormatter, FormatType},
     models::{CellType, Eol, FieldSeparator, QuoteMode},
 };
 
@@ -13,36 +13,34 @@ pub trait CellsBuilder {
     fn get_cells(&self) -> Vec<Cell>;
 }
 
-pub struct Csv<F>
-where
-    F: Formatter + Sized,
-{
+pub struct Csv {
     pub config: Config,
-    pub formatter: F,
+    pub formatter: CellFormatter,
 }
 
-impl  Csv<CommaFloatWithFrDateFormat> {
-    pub fn new_fr(config: Config) -> Self {
+impl Csv {
+    pub fn new_iso() -> Self {
         Self {
-            config,
-            formatter: CommaFloatWithFrDateFormat,    
+            config: Config::new_unix_comma(),
+            formatter: CellFormatter::new_iso(),
         }
     }
-}
 
-impl  Csv<DotFloatWithIsoDateFormat> {
-    pub fn new_iso(config: Config) -> Self {
+    pub fn new_fr() -> Self {
         Self {
-            config,
-            formatter: DotFloatWithIsoDateFormat,    
+            config: Config::new_unix_semi_column(),
+            formatter: CellFormatter::new_fr(),
         }
     }
-}
 
-impl <F> Csv<F> 
-where
-    F: Formatter + Sized,
-{
+    pub fn with_config(self, config: Config) -> Self {
+        Self { config, ..self }
+    }
+
+    pub fn with_formatter(self, formatter: CellFormatter) -> Self {
+        Self { formatter, ..self }
+    }
+
     /// utilise une table de tradution pour les en-tête (passées sous forme de clé dans CsvStruct::get_cells)
     pub fn serialize_i8n_toml<S>(&self, values: &[S], translations: Table) -> String
     where
@@ -128,28 +126,22 @@ where
     }
 
     fn format_date(&self, value: NaiveDate) -> String {
-        match self.formatter.date() {
-            FormatType::Date(f) => {
-                value.format(&f).to_string()
-            }
-            _ => unreachable!(),  
-        }      
+        match self.formatter.date_format.clone() {
+            FormatType::Date(f) => value.format(&f).to_string(),
+            _ => unreachable!(),
+        }
     }
 
     fn format_float(&self, value: f32) -> String {
-        match self.formatter.float() {
-            FormatType::Float(f) => {
-                format!("{:.3}", value).replace(".", &f)
-            }
+        match self.formatter.float_format.clone() {
+            FormatType::Float(f) => format!("{:.3}", value).replace(".", &f),
             _ => unreachable!(),
         }
     }
 
     fn format_float64(&self, value: f64) -> String {
-        match self.formatter.float() {
-            FormatType::Float(f) => {
-                format!("{:.3}", value).replace(".", &f)
-            }
+        match self.formatter.float_format.clone() {
+            FormatType::Float(f) => format!("{:.3}", value).replace(".", &f),
             _ => unreachable!(),
         }
     }
@@ -163,7 +155,7 @@ where
             _ => match quote_mode {
                 QuoteMode::All => format!(r#""{value}""#),
                 _ => value.to_string(),
-            }
+            },
         }
     }
 
@@ -187,7 +179,6 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::formatter::CommaFloatWithFrDateFormat;
 
     use super::*;
 
@@ -199,11 +190,9 @@ mod tests {
     "#;
 
         let translations: Table = toml::from_str(toml_data).unwrap();
-        let csv = Csv {
-            config: Config::new_unix_comma(),
-            formatter: CommaFloatWithFrDateFormat,
-        };
-
+        let formatter =
+            CellFormatter::new_iso().with_date_format(FormatType::Date("%d/%m%/%Y".to_string()));
+        let csv = Csv::new_iso().with_formatter(formatter);
         let result = csv.get_i18n_title("commons.recipient", &translations);
 
         assert_eq!("destinataire", result);
@@ -216,11 +205,9 @@ mod tests {
     "#;
 
         let translations: Table = toml::from_str(toml_data).unwrap();
-        let csv = Csv {
-            config: Config::new_unix_comma(),
-            formatter: CommaFloatWithFrDateFormat,
-        };
-
+        let formatter =
+            CellFormatter::new_iso().with_date_format(FormatType::Date("%d/%m%/%Y".to_string()));
+        let csv = Csv::new_iso().with_formatter(formatter);
         let result = csv.get_i18n_title("recipient", &translations);
 
         assert_eq!("destinataire", result);
