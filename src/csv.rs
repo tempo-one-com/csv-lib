@@ -1,3 +1,6 @@
+use std::string;
+
+use chrono::NaiveDate;
 use toml::Table;
 
 use crate::{
@@ -8,7 +11,7 @@ use crate::{
 };
 
 /// implémenter ce trait pour sérialiser la struct en question
-pub trait CsvStruct {
+pub trait CellsBuilder {
     fn get_cells(&self) -> Vec<Cell>;
 }
 
@@ -17,7 +20,7 @@ where
     F: Formatter + Sized,
 {
     pub config: Config,
-    pub formater: F,
+    pub formatter: F,
 }
 
 impl<F> Csv<F>
@@ -25,9 +28,9 @@ where
     F: Formatter + Sized,
 {
     /// utilise une table de tradution pour les en-tête (passées sous forme de clé dans CsvStruct::get_cells)
-    pub fn serialize_i8n<S>(&self, values: &[S], translations: Table) -> String
+    pub fn serialize_i8n_toml<S>(&self, values: &[S], translations: Table) -> String
     where
-        S: CsvStruct,
+        S: CellsBuilder,
     {
         self.serialize_opt::<S>(values, Some(translations))
     }
@@ -35,20 +38,20 @@ where
     /// utilise une table de tradution pour les en-tête (passées sous forme de clé dans CsvStruct::get_cells)
     pub fn serialize<S>(&self, values: &[S]) -> String
     where
-        S: CsvStruct,
+        S: CellsBuilder,
     {
         self.serialize_opt::<S>(values, None)
     }
 
     fn serialize_opt<S>(&self, values: &[S], translations: Option<Table>) -> String
     where
-        S: CsvStruct,
+        S: CellsBuilder,
     {
         let mut data = String::new();
         let mut header = vec![];
         let mut rows = vec![];
 
-        let mode = self.config.mode.clone();
+        let quote_mode = self.config.mode.clone();
         let field_separator = match self.config.separator {
             FieldSeparator::Comma => ",",
             FieldSeparator::SemiColumn => ";",
@@ -70,7 +73,7 @@ where
                             _ => title,
                         };
 
-                        let value = match mode {
+                        let value = match quote_mode.clone() {
                             QuoteMode::None => title.to_string(),
                             _ => format!(r#""{title}""#),
                         };
@@ -79,49 +82,15 @@ where
                     }
                 }
 
-                let value = match &cell.value {
-                    CellType::Date(v) | CellType::DateOpt(Some(v)) => match self.formater.date() {
-                        FormatType::Date(f) => {
-                            let value = v.format(&f).to_string();
-
-                            match mode {
-                                QuoteMode::All => format!(r#""{value}""#),
-                                _ => value,
-                            }
-                        }
-                        _ => unreachable!(),
-                    },
-                    CellType::Float(v) | CellType::FloatOpt(Some(v)) => match self.formater.float()
-                    {
-                        FormatType::Float(f) => {
-                            let value = format!("{:.3}", v).replace(".", &f);
-
-                            match mode {
-                                QuoteMode::All => format!(r#""{value}""#),
-                                _ => value,
-                            }
-                        }
-                        _ => unreachable!(),
-                    },
-                    CellType::Float64(v) | CellType::FloatOpt64(Some(v)) => {
-                        match self.formater.float() {
-                            FormatType::Float(f) => {
-                                let value = format!("{:.3}", v).replace(".", &f);
-
-                                match mode {
-                                    QuoteMode::All => format!(r#""{value}""#),
-                                    _ => value,
-                                }
-                            }
-                            _ => unreachable!(),
-                        }
-                    }
-                    CellType::String(v) | CellType::StringOpt(Some(v)) => match mode {
-                        QuoteMode::None => v.to_string(),
-                        _ => format!(r#""{v}""#),
-                    },
+                let string_value = match &cell.value {
+                    CellType::Date(v) | CellType::DateOpt(Some(v)) => self.format_date(*v),
+                    CellType::Float(v) | CellType::FloatOpt(Some(v)) => self.format_float(*v),
+                    CellType::Float64(v) | CellType::FloatOpt64(Some(v)) => self.format_float64(*v),
+                    CellType::String(v) | CellType::StringOpt(Some(v)) => v.to_string(),
                     _ => String::new(),
                 };
+
+                let value = self.quote_value(&string_value, cell, quote_mode.clone());
 
                 row.push(value);
             }
@@ -142,6 +111,46 @@ where
         data
     }
 
+    fn format_date(&self, value: NaiveDate) -> String {
+        match self.formatter.date() {
+            FormatType::Date(f) => {
+                value.format(&f).to_string()
+            }
+            _ => unreachable!(),  
+        }      
+    }
+
+    fn format_float(&self, value: f32) -> String {
+        match self.formatter.float() {
+            FormatType::Float(f) => {
+                format!("{:.3}", value).replace(".", &f)
+            }
+            _ => unreachable!(),
+        }
+    }
+
+    fn format_float64(&self, value: f64) -> String {
+        match self.formatter.float() {
+            FormatType::Float(f) => {
+                format!("{:.3}", value).replace(".", &f)
+            }
+            _ => unreachable!(),
+        }
+    }
+
+    fn quote_value(&self, value: &str, cell: Cell, quote_mode: QuoteMode) -> String {
+        match &cell.value {
+            CellType::String(_) | CellType::StringOpt(Some(_)) => match quote_mode {
+                QuoteMode::None => value.to_string(),
+                _ => format!(r#""{value}""#),
+            },
+            _ => match quote_mode {
+                QuoteMode::All => format!(r#""{value}""#),
+                _ => value.to_string(),
+            }
+        }
+    }
+
     fn get_i18n_title(&self, title: &str, translations: &Table) -> String {
         match title.split(".").collect::<Vec<_>>().as_slice() {
             [section, key] => translations
@@ -152,7 +161,7 @@ where
                 .unwrap_or(title.to_string()),
             [key] => translations
                 .get(*key)
-                .and_then(|x| x.as_str())                
+                .and_then(|x| x.as_str())
                 .map(|x| x.to_string())
                 .unwrap_or(title.to_string()),
             _ => title.to_string(),
@@ -176,7 +185,7 @@ mod tests {
         let translations: Table = toml::from_str(toml_data).unwrap();
         let csv = Csv {
             config: Config::new_unix_comma(),
-            formater: FormatFr,
+            formatter: FormatFr,
         };
 
         let result = csv.get_i18n_title("commons.recipient", &translations);
@@ -193,12 +202,11 @@ mod tests {
         let translations: Table = toml::from_str(toml_data).unwrap();
         let csv = Csv {
             config: Config::new_unix_comma(),
-            formater: FormatFr,
+            formatter: FormatFr,
         };
 
         let result = csv.get_i18n_title("recipient", &translations);
 
         assert_eq!("destinataire", result);
     }
-
 }

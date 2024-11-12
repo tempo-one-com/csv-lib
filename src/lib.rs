@@ -11,7 +11,7 @@ mod tests {
     use chrono::NaiveDate;
     use config::Config;
     use csv::*;
-    use formatter::{FormatStandard, FormatFr};
+    use formatter::{FormatFr, FormatStandard};
     use models::{CellType, Eol, FieldSeparator, QuoteMode};
 
     use super::*;
@@ -22,7 +22,7 @@ mod tests {
         size: f32,
     }
 
-    impl CsvStruct for Basic {
+    impl CellsBuilder for Basic {
         fn get_cells(&self) -> Vec<Cell> {
             vec![
                 Cell::new_title("Name", CellType::String(self.name.clone())),
@@ -31,7 +31,6 @@ mod tests {
         }
     }
 
-
     #[derive(Debug, Default)]
     struct Person {
         name: String,
@@ -39,8 +38,8 @@ mod tests {
         removed_on: Option<NaiveDate>,
         size: f32,
     }
-    
-    impl CsvStruct for Person {
+
+    impl CellsBuilder for Person {
         fn get_cells(&self) -> Vec<Cell> {
             vec![
                 Cell::new_title("Name", CellType::String(self.name.clone())),
@@ -50,7 +49,7 @@ mod tests {
             ]
         }
     }
-    
+
     #[test]
     fn fr_linux() {
         let values = vec![
@@ -71,7 +70,10 @@ mod tests {
         let config = Config::new_unix_semi_column();
         let formater = FormatFr;
 
-        let csv = Csv { config, formater };
+        let csv = Csv {
+            config,
+            formatter: formater,
+        };
         let result = csv.serialize::<Person>(&values);
         let expected = r#""Name";"Taille";"DOB";"DeletedOn"
 "A";1,790;28/01/2020;07/11/2024
@@ -105,7 +107,10 @@ mod tests {
         };
         let formater = FormatStandard;
 
-        let csv = Csv { config, formater };
+        let csv = Csv {
+            config,
+            formatter: formater,
+        };
         let result = csv.serialize::<Person>(&values);
         let expected = r#""Name","Taille","DOB","DeletedOn"
 "A",1.790,2020-01-28,2024-11-07
@@ -116,12 +121,10 @@ mod tests {
 
     #[test]
     fn mode_none() {
-        let values = vec![
-            Basic {
-                name: "A".to_string(),
-                ..Default::default()
-            },
-        ];
+        let values = vec![Basic {
+            name: "A".to_string(),
+            ..Default::default()
+        }];
 
         let config = Config {
             eol: Eol::Unix,
@@ -132,7 +135,10 @@ mod tests {
 
         let formater = FormatStandard;
 
-        let csv = Csv { config, formater };
+        let csv = Csv {
+            config,
+            formatter: formater,
+        };
         let result = csv.serialize::<Basic>(&values);
         let expected = r#"Name,Taille
 A,0.000"#;
@@ -140,21 +146,21 @@ A,0.000"#;
         assert_eq!(expected, result);
     }
 
-    #[test]    
+    #[test]
     fn mode_all() {
-        let values = vec![
-            Basic {
-                name: "A".to_string(),
-                ..Default::default()
-            },
-        ];
+        let values = vec![Basic {
+            name: "A".to_string(),
+            ..Default::default()
+        }];
 
-        let config = Config::new_unix_semi_column()
-            .with_mode(QuoteMode::All);
+        let config = Config::new_unix_semi_column().with_mode(QuoteMode::All);
 
         let formater = FormatFr;
 
-        let csv = Csv { config, formater };
+        let csv = Csv {
+            config,
+            formatter: formater,
+        };
         let result = csv.serialize::<Basic>(&values);
         let expected = r#""Name";"Taille"
 "A";"0,000""#;
@@ -162,20 +168,21 @@ A,0.000"#;
         assert_eq!(expected, result);
     }
 
-    #[test]    
+    #[test]
     fn mode_mix() {
-        let values = vec![
-            Basic {
-                name: "A".to_string(),
-                ..Default::default()
-            },
-        ];
+        let values = vec![Basic {
+            name: "A".to_string(),
+            ..Default::default()
+        }];
 
         let config = Config::new_unix_semi_column();
 
         let formater = FormatFr;
 
-        let csv = Csv { config, formater };
+        let csv = Csv {
+            config,
+            formatter: formater,
+        };
         let result = csv.serialize::<Basic>(&values);
         let expected = r#""Name";"Taille"
 "A";0,000"#;
@@ -183,24 +190,24 @@ A,0.000"#;
         assert_eq!(expected, result);
     }
 
-    #[test]    
+    #[test]
     fn no_header() {
-        let values = vec![
-            Basic {
-                name: "A".to_string(),
-                ..Default::default()
-            },
-        ];
+        let values = vec![Basic {
+            name: "A".to_string(),
+            ..Default::default()
+        }];
 
-        let config = Config::new_unix_semi_column()
-            .with_header(false);
+        let config = Config::new_unix_semi_column().with_header(false);
 
         let formater = FormatFr;
 
-        let csv = Csv { config, formater };
+        let csv = Csv {
+            config,
+            formatter: formater,
+        };
         let result = csv.serialize::<Basic>(&values);
         let expected = r#""A";0,000"#;
 
         assert_eq!(expected, result);
-    }    
+    }
 }
