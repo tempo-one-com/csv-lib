@@ -19,6 +19,13 @@ pub struct Csv {
 }
 
 impl Csv {
+    pub fn new_from_lang(lang: &str) -> Self {
+        match lang.to_lowercase().as_str() {
+            "fr" => Csv::new_fr(),
+            _ => Csv::new_iso(),
+        }
+    }
+
     pub fn new_iso() -> Self {
         Self {
             config: Config::new_unix_comma(),
