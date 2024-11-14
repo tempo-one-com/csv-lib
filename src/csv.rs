@@ -90,7 +90,7 @@ impl Csv {
                 if i == 0 && self.config.has_header {
                     if let Some(title) = cell.title.clone() {
                         let title = match translations.clone() {
-                            Some(i18n) => self.get_i18n_title(&title, &i18n),
+                            Some(i18n) => self.get_i18n(&title, &i18n),
                             _ => title,
                         };
 
@@ -103,10 +103,11 @@ impl Csv {
                     }
                 }
 
-                let string_value = match &cell.value {
-                    CellType::Date(v) | CellType::DateOpt(Some(v)) => self.format_date(*v),
-                    CellType::Float(v) | CellType::FloatOpt(Some(v)) => self.format_float(*v),
-                    CellType::Float64(v) | CellType::FloatOpt64(Some(v)) => self.format_float64(*v),
+                let string_value = match cell.value.clone() {
+                    CellType::Date(v) | CellType::DateOpt(Some(v)) => self.format_date(v),
+                    CellType::Float(v) | CellType::FloatOpt(Some(v)) => self.format_float(v),
+                    CellType::Float64(v) | CellType::FloatOpt64(Some(v)) => self.format_float64(v),
+                    CellType::Int(v) | CellType::IntOpt(Some(v)) => v.to_string(),
                     CellType::String(v) | CellType::StringOpt(Some(v)) => v.to_string(),
                     _ => String::new(),
                 };
@@ -166,7 +167,7 @@ impl Csv {
         }
     }
 
-    fn get_i18n_title(&self, title: &str, translations: &Table) -> String {
+    fn get_i18n(&self, title: &str, translations: &Table) -> String {
         match title.split(".").collect::<Vec<_>>().as_slice() {
             [section, key] => translations
                 .get(*section)
@@ -200,7 +201,7 @@ mod tests {
         let formatter =
             CellFormatter::new_iso().with_date_format(FormatType::Date("%d/%m%/%Y".to_string()));
         let csv = Csv::new_iso().with_formatter(formatter);
-        let result = csv.get_i18n_title("commons.recipient", &translations);
+        let result = csv.get_i18n("commons.recipient", &translations);
 
         assert_eq!("destinataire", result);
     }
@@ -215,7 +216,7 @@ mod tests {
         let formatter =
             CellFormatter::new_iso().with_date_format(FormatType::Date("%d/%m%/%Y".to_string()));
         let csv = Csv::new_iso().with_formatter(formatter);
-        let result = csv.get_i18n_title("recipient", &translations);
+        let result = csv.get_i18n("recipient", &translations);
 
         assert_eq!("destinataire", result);
     }

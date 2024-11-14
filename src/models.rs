@@ -17,6 +17,7 @@ pub enum FieldSeparator {
     SemiColumn,
 }
 
+#[derive(Debug, Clone)]
 pub enum CellType {
     String(String),
     StringOpt(Option<String>),
