@@ -24,7 +24,7 @@ mod tests {
     impl CellsBuilder for Basic {
         fn get_cells(&self) -> Vec<Cell> {
             vec![
-                Cell::new_title("Name", CellType::String(self.name.clone())),
+                Cell::new_title("Name", self.name.clone().into()),
                 Cell::new_title("Taille", CellType::Float(self.size)),
             ]
         }
@@ -43,12 +43,12 @@ mod tests {
     impl CellsBuilder for Person {
         fn get_cells(&self) -> Vec<Cell> {
             vec![
-                Cell::new_title("Name", CellType::String(self.name.clone())),
-                Cell::new_title("Taille", CellType::Float(self.size)),
-                Cell::new_title("DOB", CellType::Date(self.date)),
-                Cell::new_title("DeletedOn", CellType::DateOpt(self.removed_on)),
-                Cell::new_title("Age", CellType::Int(self.age)),
-                Cell::new_title("DateTime", CellType::Datetime(self.date_time)),
+                Cell::new_title("Name", self.name.clone().into()),
+                Cell::new_title("Taille", self.size.into()),
+                Cell::new_title("DOB", self.date.into()),
+                Cell::new_title("DeletedOn", self.removed_on.into()),
+                Cell::new_title("Age", self.age.into()),
+                Cell::new_title("DateTime", self.date_time.into()),
             ]
         }
     }
