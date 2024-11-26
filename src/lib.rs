@@ -8,7 +8,7 @@ pub mod models;
 mod tests {
 
     use cell::Cell;
-    use chrono::NaiveDate;
+    use chrono::{NaiveDate, NaiveDateTime};
     use config::Config;
     use csv::*;
     use models::{CellType, QuoteMode};
@@ -37,6 +37,7 @@ mod tests {
         removed_on: Option<NaiveDate>,
         size: f32,
         age: i32,
+        date_time: NaiveDateTime,
     }
 
     impl CellsBuilder for Person {
@@ -47,6 +48,7 @@ mod tests {
                 Cell::new_title("DOB", CellType::Date(self.date)),
                 Cell::new_title("DeletedOn", CellType::DateOpt(self.removed_on)),
                 Cell::new_title("Age", CellType::Int(self.age)),
+                Cell::new_title("DateTime", CellType::Datetime(self.date_time)),
             ]
         }
     }
@@ -60,6 +62,10 @@ mod tests {
                 removed_on: Some(NaiveDate::from_ymd_opt(2024, 11, 7).unwrap()),
                 size: 1.79,
                 age: 30,
+                date_time: NaiveDate::from_ymd_opt(2020, 1, 28)
+                    .unwrap()
+                    .and_hms_opt(10, 10, 0)
+                    .unwrap(),
             },
             Person {
                 name: "B".to_string(),
@@ -67,14 +73,18 @@ mod tests {
                 removed_on: None,
                 size: 1.75,
                 age: 25,
+                date_time: NaiveDate::from_ymd_opt(1950, 10, 11)
+                    .unwrap()
+                    .and_hms_opt(10, 10, 0)
+                    .unwrap(),
             },
         ];
 
         let csv = Csv::new_fr();
         let result = csv.serialize::<Person>(&values);
-        let expected = r#""Name";"Taille";"DOB";"DeletedOn";"Age"
-"A";1,790;28/01/2020;07/11/2024;30
-"B";1,750;11/10/1950;;25"#;
+        let expected = r#""Name";"Taille";"DOB";"DeletedOn";"Age";"DateTime"
+"A";1,790;28/01/2020;07/11/2024;30;28/01/2020T10:10
+"B";1,750;11/10/1950;;25;11/10/1950T10:10"#;
 
         assert_eq!(expected, result);
     }
@@ -88,6 +98,10 @@ mod tests {
                 removed_on: Some(NaiveDate::from_ymd_opt(2024, 11, 7).unwrap()),
                 size: 1.79,
                 age: 20,
+                date_time: NaiveDate::from_ymd_opt(2020, 1, 28)
+                    .unwrap()
+                    .and_hms_opt(10, 10, 0)
+                    .unwrap(),
             },
             Person {
                 name: "B".to_string(),
@@ -95,14 +109,18 @@ mod tests {
                 removed_on: None,
                 size: 1.75,
                 age: 20,
+                date_time: NaiveDate::from_ymd_opt(1950, 10, 11)
+                    .unwrap()
+                    .and_hms_opt(10, 10, 0)
+                    .unwrap(),
             },
         ];
 
         let csv = Csv::new_iso();
         let result = csv.serialize::<Person>(&values);
-        let expected = r#""Name","Taille","DOB","DeletedOn","Age"
-"A",1.790,2020-01-28,2024-11-07,20
-"B",1.750,1950-10-11,,20"#;
+        let expected = r#""Name","Taille","DOB","DeletedOn","Age","DateTime"
+"A",1.790,2020-01-28,2024-11-07,20,2020-01-28T10:10
+"B",1.750,1950-10-11,,20,1950-10-11T10:10"#;
 
         assert_eq!(expected, result);
     }

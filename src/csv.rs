@@ -1,4 +1,4 @@
-use chrono::NaiveDate;
+use chrono::{NaiveDate, NaiveDateTime};
 use toml::Table;
 
 use crate::{
@@ -105,6 +105,9 @@ impl Csv {
 
                 let string_value = match cell.value.clone() {
                     CellType::Date(v) | CellType::DateOpt(Some(v)) => self.format_date(v),
+                    CellType::Datetime(v) | CellType::DatetimeOpt(Some(v)) => {
+                        self.format_datetime(v)
+                    }
                     CellType::Float(v) | CellType::FloatOpt(Some(v)) => self.format_float(v),
                     CellType::Float64(v) | CellType::FloatOpt64(Some(v)) => self.format_float64(v),
                     CellType::Int(v) | CellType::IntOpt(Some(v)) => v.to_string(),
@@ -136,6 +139,18 @@ impl Csv {
     fn format_date(&self, value: NaiveDate) -> String {
         match self.formatter.date_format.clone() {
             FormatType::Date(f) => value.format(&f).to_string(),
+            _ => unreachable!(),
+        }
+    }
+
+    fn format_datetime(&self, value: NaiveDateTime) -> String {
+        match self.formatter.date_format.clone() {
+            FormatType::Date(f) => {
+                let date = value.date().format(&f).to_string();
+                let time = value.time().format("%H:%M").to_string();
+
+                format!("{date}T{time}")
+            }
             _ => unreachable!(),
         }
     }

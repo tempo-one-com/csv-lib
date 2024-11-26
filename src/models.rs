@@ -1,4 +1,4 @@
-use chrono::NaiveDate;
+use chrono::{NaiveDate, NaiveDateTime};
 
 #[derive(Debug, Clone)]
 pub enum QuoteMode {
@@ -24,6 +24,9 @@ pub enum CellType {
 
     Date(NaiveDate),
     DateOpt(Option<NaiveDate>),
+
+    Datetime(NaiveDateTime),
+    DatetimeOpt(Option<NaiveDateTime>),
 
     Float(f32),
     FloatOpt(Option<f32>),
